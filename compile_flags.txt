@@ -1,0 +1,5 @@
+-std=gnu++23
+-Wall
+-Wextra
+-Iinclude
+-Ithreadprocs/libtproc
