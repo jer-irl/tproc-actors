@@ -1,0 +1,3 @@
+[submodule "threadprocs"]
+	path = threadprocs
+	url = https://github.com/jer-irl/threadprocs.git
