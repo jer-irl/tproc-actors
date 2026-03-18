@@ -3,7 +3,7 @@
 #include "mem.hpp"
 #include "rings.hpp"
 
-#include <concepts>
+#include <iostream>
 #include <stdexcept>
 #include <string_view>
 
@@ -48,11 +48,11 @@ struct Receivables;
 template <typename... DestructableTs>
 struct Destructables;
 
-template <typename ReceivablesT, typename DestructablesT>
+template <typename DerivedT, typename ReceivablesT, typename DestructablesT>
 class Actor;
 
-template <typename... ReceivableTs, typename... DestructableTs>
-class Actor<Receivables<ReceivableTs...>, Destructables<DestructableTs...>> : private Receiver<ReceivableTs>..., private Destructor<DestructableTs>... {
+template <typename DerivedT, typename... ReceivableTs, typename... DestructableTs>
+class Actor<DerivedT, Receivables<ReceivableTs...>, Destructables<DestructableTs...>> : private Receiver<ReceivableTs>..., private Destructor<DestructableTs>... {
 private:
     struct alignas(64) Message {
         UniqueResourcePtr<void> payload{};
@@ -63,7 +63,8 @@ public:
     explicit Actor(std::string_view name) : Actor{name, *ActorRegistry::instance()} {}
     Actor(std::string_view name, ActorRegistry& registry) : tproc_id_(registry.tproc_id())
     {
-        auto res = registry.register_actor(name, *this);
+        std::cout << "Registering actor with name " << name << std::endl;
+        auto res = registry.register_actor<DerivedT>(name, static_cast<DerivedT&>(*this));
         if (!res) {
             throw std::runtime_error("Failed to register actor: " + res.error());
         }
@@ -79,7 +80,7 @@ public:
         requires (std::is_same_v<T, ReceivableTs> || ...) && ( requires { self.on_message_impl(std::declval<UniqueResourcePtr<T>>()); } )
     {
         UniqueResourcePtr<void> erased_resource = std::move(reinterpret_cast<UniqueResourcePtr<void>&&>(resource));
-        while (self.recv_queue_.push(Message{std::move(erased_resource)})) {
+        while (!self.recv_queue_.push(Message{std::move(erased_resource)})) {
             // Wait for space in the queue
         }
     }

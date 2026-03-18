@@ -12,20 +12,30 @@ struct NoisyInt {
     ~NoisyInt() {
         std::cout << "Destructing NoisyInt with value " << val << std::endl;
     }
+
+    NoisyInt(const NoisyInt& other) = delete;
+    NoisyInt& operator=(const NoisyInt& other) = delete;
+    NoisyInt(NoisyInt&& other) noexcept = delete;
+    NoisyInt& operator=(NoisyInt&& other) noexcept = delete;
+
+    operator int() const {
+        return val;
+    }
     int val;
 };
 
 class PongActor;
 
-class PingActor : public tpactor::Actor<tpactor::Receivables<NoisyInt>, tpactor::Destructables<NoisyInt>> {
+class PingActor : public tpactor::Actor<PingActor, tpactor::Receivables<NoisyInt>, tpactor::Destructables<NoisyInt>> {
 public:
     using Actor::Actor;
     
     auto set_pong_actor(PongActor& pong_actor) {
         pong_actor_ = &pong_actor;
+        ready_.store(true, std::memory_order_release);
     }
 
-    auto send_ping(NoisyInt val) ->void;
+    auto send_ping(int val) ->void;
 
     auto on_message_impl(tpactor::UniqueResourcePtr<NoisyInt> message) -> void {
         std::cout << "Got pong with value " << message->val << std::endl;
@@ -46,12 +56,13 @@ private:
     bool got_pong_{false};
 };
 
-class PongActor : public tpactor::Actor<tpactor::Receivables<NoisyInt>, tpactor::Destructables<NoisyInt>> {
+class PongActor : public tpactor::Actor<PongActor, tpactor::Receivables<NoisyInt>, tpactor::Destructables<NoisyInt>> {
 public:
     using Actor::Actor;
 
     auto set_ping_actor(PingActor& ping_actor) {
         ping_actor_ = &ping_actor;
+        ready_.store(true, std::memory_order_release);
     }
 
     auto on_message_impl(tpactor::UniqueResourcePtr<NoisyInt> message) -> void {
@@ -74,8 +85,10 @@ private:
     bool got_ping_{false};
 };
 
-auto PingActor::send_ping(NoisyInt val) -> void {
-    send_to(tpactor::UniqueResourcePtr{new NoisyInt(val), tproc_id()});
+auto PingActor::send_ping(int val) -> void {
+    std::cout << "Sending ping with value " << val << std::endl;
+    pong_actor_->send_to(tpactor::UniqueResourcePtr{new NoisyInt{val}, tproc_id()});
+    std::cout << "Ping sent" << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -97,13 +110,14 @@ int main(int argc, char** argv) {
     if (std::string_view(argv[1]) == "PING") {
         PingActor ping{"PingActor"};
 
-        std::cout << "PingActor created. Press waiting to bind PongActor..." << std::endl;
+        std::cout << "PingActor created waiting to bind PongActor..." << std::endl;
 
         while (!registry.find_actor<PongActor>("PongActor")) {
             // Wait for PongActor to be created
         }
 
         PongActor& pong = registry.find_actor<PongActor>("PongActor")->get();
+        std::cout << "PongActor found!" << std::endl;
         ping.set_pong_actor(pong);
 
         while (!ping.ready() || !pong.ready()) {
@@ -118,13 +132,14 @@ int main(int argc, char** argv) {
 
     } else if (std::string_view(argv[1]) == "PONG") {
         PongActor pong{"PongActor"};
-        std::cout << "PongActor created. Press waiting to bind PingActor..." << std::endl;
+        std::cout << "PongActor created waiting to bind PingActor..." << std::endl;
 
         while (!registry.find_actor<PingActor>("PingActor")) {
             // Wait for PingActor to be created
         }
 
         PingActor& ping = registry.find_actor<PingActor>("PingActor")->get();
+        std::cout << "PingActor found!" << std::endl;
         pong.set_ping_actor(ping);
 
         while (!pong.got_ping()) {

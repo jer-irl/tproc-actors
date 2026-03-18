@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <expected>
 #include <functional>
-#include <optional>
+#include <iostream>
 #include <string>
 #include <string_view>
 #include <typeinfo>
@@ -13,6 +13,7 @@
 namespace tpactor {
 
 struct GlobalShmScratch;
+struct RegistryRing;
 template <typename T>
 class UniqueResourcePtr;
 
@@ -59,6 +60,7 @@ public:
 		}
 		const ActorEntry& entry = it->second;
 		if (*entry.type_info != typeid(ActorT)) {
+			std::cout << "Type mismatch when finding actor " << name << ": expected " << typeid(ActorT).name() << ", actual " << entry.type_info->name() << std::endl;
 			return std::unexpected{FindActorError::TypeMismatch};
 		}
 		return std::reference_wrapper<ActorT>{*static_cast<ActorT*>(entry.actor)};
@@ -90,6 +92,7 @@ private:
 	std::unordered_map<std::size_t, std::function<void(void*)>> destructors_;
 
 	GlobalShmScratch* shm_scratch_;
+	RegistryRing* own_ring_;
 	std::uint64_t tproc_id_;
 
 	std::atomic_bool should_stop_{false};
