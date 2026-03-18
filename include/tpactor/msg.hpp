@@ -2,7 +2,6 @@
 
 namespace tpactor {
 
-class 
 
 
 } // namespace tpactor

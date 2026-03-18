@@ -12,7 +12,7 @@ public:
 
 	MpscRing() = default;
 
-	bool push(const T& item) {
+	bool push(T&& item) {
 		uint64_t tail = append_tail_.load(std::memory_order_acquire);
 		uint64_t head = head_.load(std::memory_order_acquire);
 		if (tail - head >= Size) {
@@ -25,7 +25,7 @@ public:
 			}
 		}
 
-		buffer_[tail % Size] = item;
+		buffer_[tail % Size] = std::move(item);
 
 		while (committed_tail_.load(std::memory_order_acquire) != tail) {
 			// Wait for our turn to commit
@@ -41,7 +41,7 @@ public:
 		if (tail == head) {
 			return false; // Ring is empty
 		}
-		item = buffer_[head % Size];
+		item = std::move(buffer_[head % Size]);
 		head_.store(head + 1, std::memory_order_release);
 		return true;
 	}
