@@ -18,27 +18,10 @@ struct Destructor {
             delete reinterpret_cast<T*>(resource);
         });
     }
-
-    auto on_release_impl(UniqueResourcePtr<T> resource) -> void {
-        delete resource.get();
-    }
-    auto register_destructor(ActorRegistry& registry) -> void {
-        registry.register_destructor(+[](void* resource) {
-            delete reinterpret_cast<T*>(resource);
-        });
-    }
 };
 
 template <typename T>
 struct Receiver {
-    template <typename ReceivableT, typename Self>
-    auto on_message_helper(this Self&& self, UniqueResourcePtr<void>& message) -> bool {
-        if (typeid(ReceivableT) == message.type_info()) {
-            self.on_message_impl(std::move(reinterpret_cast<UniqueResourcePtr<ReceivableT>&&>(message)));
-            return true;
-        }
-        return false;
-    }
 };
 
 template <typename... ReceivableTs>
@@ -85,15 +68,6 @@ public:
         }
     }
 
-    template <typename Self, typename T>
-    auto release_to(this Self&& self, UniqueResourcePtr<T> resource)
-        requires (self.on_release_impl(std::declval<UniqueResourcePtr<T>>()))
-    {
-        while (!self.recv_queue_.push(Message{.kind = Message::Kind::Release, .payload = std::move(reinterpret_cast<UniqueResourcePtr<void>&&>(resource))})) {
-            // Wait for space in the queue
-        }
-    }
-
     auto tproc_id() const -> std::uint64_t { return tproc_id_; }
 
     template <typename Self>
@@ -104,21 +78,6 @@ public:
             return true;
         }
         return false;
-    }
-
-protected:
-    template <typename TargetActorT, typename T>
-    auto do_send(std::string_view target_actor_name, UniqueResourcePtr<T> message) -> void {
-        auto target_actor_res = ActorRegistry::instance()->get().find_actor<TargetActorT>(target_actor_name);
-        if (!target_actor_res) {
-            throw std::runtime_error("Failed to find target actor: " + target_actor_res.error());
-        }
-        auto target_actor_opt = target_actor_res.value();
-        if (!target_actor_opt) {
-            throw std::runtime_error("Target actor not found: " + std::string{target_actor_name});
-        }
-        auto& target_actor = target_actor_opt.value().get();
-        target_actor.send_to(std::move(message));
     }
 
 private:
@@ -137,17 +96,6 @@ private:
         (self.template on_message_helper<ReceivableTs>(message) || ...);
     }
 
-    template <typename Self, typename T>
-    auto on_release(this Self&& self, UniqueResourcePtr<T> resource) -> void {
-        if (!resource.get()) {
-            return;
-        }
-        if (resource.tproc_id() != self.tproc_id_) {
-            throw std::runtime_error("Received release request for resource not owned by this threadproc");
-        }
-        self.on_release_impl(std::move(resource));
-    }
-    
     MpscRing<Message, 512> recv_queue_;
     std::uint64_t tproc_id_{0};
 };

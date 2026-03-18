@@ -24,6 +24,7 @@ struct alignas(64) RegistryRingEntry {
 	};
 	Kind kind;
 	struct FlatActor {
+		std::uint64_t tproc_id;
 		std::array<char, 32> name;
 		std::type_info const* type_info;
 		void* ptr;
@@ -70,7 +71,7 @@ ActorRegistry::ActorRegistry() {
 	shm_scratch_->registry_rings[tproc_id_].store(ring, std::memory_order_release);
 
 	// Notify any existing tprocs of our existence by pushing a "new tproc" entry into their rings.  This allows them to clean up any state associated with tprocs that have since exited.
-	for (uint i = 0; i < shm_scratch_->num_tprocs.load(std::memory_order_acquire); i++) {
+	for (uint64_t i = 0; i < shm_scratch_->num_tprocs.load(std::memory_order_acquire); i++) {
 		if (i == tproc_id_) {
 			continue; // No need to notify ourselves
 		}
@@ -112,6 +113,7 @@ auto ActorRegistry::poll_queue() -> bool {
 						RegistryRingEntry new_actor_entry{
 							.kind = RegistryRingEntry::Kind::Register,
 							.payload = RegistryRingEntry::FlatActor{
+								.tproc_id = tproc_id_,
 								.name = {},
 								.type_info = actor_entry.type_info,
 								.ptr = actor_entry.actor,
@@ -133,7 +135,7 @@ auto ActorRegistry::poll_queue() -> bool {
 					std::lock_guard lock{actors_mutex_};
 					auto& actor = std::get<RegistryRingEntry::FlatActor>(entry.payload);
 					std::cout << "Registering actor: " << std::string_view{actor.name.data(), ::strnlen(actor.name.data(), actor.name.size())} << std::endl;
-					actors_.emplace(std::string{actor.name.data()}, ActorEntry{tproc_id_, actor.type_info, actor.ptr});
+					actors_.emplace(std::string{actor.name.data()}, ActorEntry{actor.tproc_id, actor.type_info, actor.ptr});
 				}
 				break;
 			case RegistryRingEntry::Kind::Unregister:
@@ -176,7 +178,7 @@ auto ActorRegistry::register_actor_erased(std::string_view name, std::type_info 
 	}
 
 	uint64_t num_tprocs = shm_scratch_->num_tprocs.load(std::memory_order_acquire);
-	for (uint i = 0; i < num_tprocs; i++) {
+	for (uint64_t i = 0; i < num_tprocs; i++) {
 		if (i == tproc_id_) {
 			continue; // No need to notify ourselves
 		}
@@ -187,6 +189,7 @@ auto ActorRegistry::register_actor_erased(std::string_view name, std::type_info 
 		RegistryRingEntry entry{
 			.kind = RegistryRingEntry::Kind::Register,
 			.payload = RegistryRingEntry::FlatActor{
+				.tproc_id = tproc_id_,
 				.name = {},
 				.type_info = &type_info,
 				.ptr = actor,
