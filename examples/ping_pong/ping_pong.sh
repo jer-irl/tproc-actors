@@ -11,7 +11,8 @@ ACTOR_BUILD="${ROOT_DIR}/buildout"
 
 SERVER="${TPROC_BUILD}/server"
 LAUNCHER="${TPROC_BUILD}/launcher"
-PING_PONG="${ACTOR_BUILD}/examples/ping_pong"
+PING="${ACTOR_BUILD}/examples/ping"
+PONG="${ACTOR_BUILD}/examples/pong"
 
 SOCK="${ACTOR_BUILD}/examples/ping_pong.sock"
 rm -f "${SOCK}"
@@ -44,13 +45,13 @@ sleep 1
 echo ">>> tproc server running (pid ${server_pid})"
 
 echo ">>> Launching PONG process into tproc server..."
-${LAUNCHER} "${SOCK}" "${PING_PONG}" PONG &
+${LAUNCHER} "${SOCK}" "${PONG}" &
 pong_pid=$!
 sleep 1
 echo ">>> PONG process running (pid ${pong_pid})"
 
 echo ">>> Launching PING process into tproc server..."
-${LAUNCHER} "${SOCK}" "${PING_PONG}" PING
+${LAUNCHER} "${SOCK}" "${PING}"
 ping_pid=
 
 echo ">>> PING process exited"

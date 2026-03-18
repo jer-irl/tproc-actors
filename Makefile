@@ -25,7 +25,8 @@ LIB_CFLAGS := -Iinclude -I$(LIBTPROC_DIR)
 
 # --- Examples --------------------------------------------------------------
 
-EXAMPLE_DIRS := $(wildcard examples/*/.)
+EXAMPLE_DIRS := $(foreach d,$(wildcard examples/*/.),\
+                  $(if $(wildcard $(dir $(d))*.cpp),$(d)))
 EXAMPLE_BINS := $(foreach d,$(EXAMPLE_DIRS),\
                   $(BUILD_DIR)/examples/$(notdir $(patsubst %/.,%,$(d))))
 
@@ -63,7 +64,7 @@ $(LIB): $(LIB_OBJS) $(LIBTPROC_A) | $(BUILD_DIR)
 
 define EXAMPLE_template
 $(BUILD_DIR)/examples/$(1): $(wildcard examples/$(1)/*.cpp) $(LIB) | $(BUILD_DIR)/examples
-	$(CXX) $(CXXFLAGS) -Iinclude -o $$@ $(wildcard examples/$(1)/*.cpp) -L$(BUILD_DIR) -ltpactor
+	$(CXX) $(CXXFLAGS) -Iinclude -Iexamples -o $$@ $(wildcard examples/$(1)/*.cpp) -L$(BUILD_DIR) -ltpactor
 endef
 
 $(foreach d,$(EXAMPLE_DIRS),\
