@@ -3,3 +3,4 @@
 -Wextra
 -Iinclude
 -Ithreadprocs/libtproc
+-Iexamples

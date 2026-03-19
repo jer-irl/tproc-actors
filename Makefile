@@ -32,7 +32,9 @@ EXAMPLE_BINS := $(foreach d,$(EXAMPLE_DIRS),\
 
 # ======================================================================
 
-.PHONY: all lib examples clean
+EXAMPLE_SCRIPTS := $(wildcard examples/*/*.sh)
+
+.PHONY: all lib examples test clean
 
 all: lib examples
 
@@ -42,6 +44,12 @@ examples: $(EXAMPLE_BINS)
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+test: examples
+	@for s in $(EXAMPLE_SCRIPTS); do \
+		echo ">>> Running $$s ..."; \
+		bash "$$s" || exit 1; \
+	done
 
 # --- libtproc build -------------------------------------------------------
 
