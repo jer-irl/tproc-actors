@@ -2,7 +2,7 @@ CXX := g++
 CC  := gcc
 AR  := ar
 
-CXXFLAGS := -Og -g -Wall -Wextra -Werror -std=gnu++23
+CXXFLAGS := -Og -g -Wall -Wextra -Werror -std=gnu++23 -fconcepts-diagnostics-depth=2
 CFLAGS   := -Og -g -Wall -Wextra -Werror -fPIC
 DEPFLAGS  = -MMD -MP -MF $(@:.o=.d)
 
@@ -62,9 +62,19 @@ $(LIB): $(LIB_OBJS) $(LIBTPROC_A) | $(BUILD_DIR)
 
 # --- Example build (each subdir produces one binary) ----------------------
 
+EXAMPLE_CFLAGS := -Iinclude -Iexamples
+
+$(OBJ_DIR)/examples/%.o: examples/%.cpp | $(OBJ_DIR)/examples
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(EXAMPLE_CFLAGS) $(DEPFLAGS) -c -o $@ $<
+
 define EXAMPLE_template
-$(BUILD_DIR)/examples/$(1): $(wildcard examples/$(1)/*.cpp) $(LIB) | $(BUILD_DIR)/examples
-	$(CXX) $(CXXFLAGS) -Iinclude -Iexamples -o $$@ $(wildcard examples/$(1)/*.cpp) -L$(BUILD_DIR) -ltpactor
+_$(1)_SRCS := $(wildcard examples/$(1)/*.cpp)
+_$(1)_OBJS := $$(patsubst examples/%.cpp,$(OBJ_DIR)/examples/%.o,$$(_$(1)_SRCS))
+EXAMPLE_OBJS += $$(_$(1)_OBJS)
+
+$(BUILD_DIR)/examples/$(1): $$(_$(1)_OBJS) $(LIB) | $(BUILD_DIR)/examples
+	$(CXX) $(CXXFLAGS) -o $$@ $$(_$(1)_OBJS) -L$(BUILD_DIR) -ltpactor
 endef
 
 $(foreach d,$(EXAMPLE_DIRS),\
@@ -72,10 +82,10 @@ $(foreach d,$(EXAMPLE_DIRS),\
 
 # --- Directory creation ----------------------------------------------------
 
-$(BUILD_DIR) $(BUILD_DIR)/examples $(OBJ_DIR)/libtproc $(OBJ_DIR)/tpactor:
+$(BUILD_DIR) $(BUILD_DIR)/examples $(OBJ_DIR)/libtproc $(OBJ_DIR)/tpactor $(OBJ_DIR)/examples:
 	mkdir -p $@
 
 # --- Auto-generated header dependencies ------------------------------------
 
-ALL_DEPS := $(patsubst %.o,%.d,$(LIB_OBJS) $(LIBTPROC_OBJS))
+ALL_DEPS := $(patsubst %.o,%.d,$(LIB_OBJS) $(LIBTPROC_OBJS) $(EXAMPLE_OBJS))
 -include $(ALL_DEPS)

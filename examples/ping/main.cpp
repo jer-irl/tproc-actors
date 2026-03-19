@@ -13,6 +13,7 @@ int main() {
     };
 
     PingActor ping{"PingActor"};
+    ping.do_registrations(registry);
 
     std::cout << "PingActor created waiting to bind PongActor..." << std::endl;
 

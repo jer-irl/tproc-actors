@@ -27,8 +27,11 @@ struct NoisyInt {
 
 class PongActor;
 
-class PingActor : public tpactor::Actor<PingActor, tpactor::Receivables<NoisyInt>, tpactor::Destructables<NoisyInt>> {
+class PingActor : public tpactor::Actor {
 public:
+    using Receivables = std::tuple<NoisyInt>;
+    using Destructables = std::tuple<NoisyInt>;
+    
     using Actor::Actor;
 
     auto set_pong_actor(PongActor& pong_actor) {
@@ -57,8 +60,11 @@ private:
     bool got_pong_{false};
 };
 
-class PongActor : public tpactor::Actor<PongActor, tpactor::Receivables<NoisyInt>, tpactor::Destructables<NoisyInt>> {
+class PongActor : public tpactor::Actor {
 public:
+    using Receivables = std::tuple<NoisyInt>;
+    using Destructables = std::tuple<NoisyInt>;
+    
     using Actor::Actor;
 
     auto set_ping_actor(PingActor& ping_actor) {

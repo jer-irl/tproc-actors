@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tpactor/meta.hpp>
+
 #include <atomic>
 #include <cstdint>
 #include <expected>
@@ -7,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
 
@@ -35,7 +38,9 @@ public:
 	}
 
 	template <typename ActorT>
-	auto register_actor(std::string_view name, ActorT& actor) -> std::expected<void, std::string> {
+	auto register_actor(std::string_view name, ActorT& actor) -> std::expected<void, std::string> 
+		requires ActorImpl<std::remove_cvref_t<ActorT>>
+	{
 		return register_actor_erased(name, typeid(ActorT), static_cast<void*>(&actor));
 	}
 

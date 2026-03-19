@@ -13,6 +13,8 @@ int main() {
     };
 
     PongActor pong{"PongActor"};
+    pong.do_registrations(registry);
+    
     std::cout << "PongActor created waiting to bind PingActor..." << std::endl;
 
     while (!registry.find_actor<PingActor>("PingActor")) {
