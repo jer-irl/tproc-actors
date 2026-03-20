@@ -39,7 +39,7 @@ public:
 
 	template <typename ActorT>
 	auto register_actor(std::string_view name, ActorT& actor) -> std::expected<void, std::string> 
-		requires ActorImpl<std::remove_cvref_t<ActorT>>
+		requires ActorImpl<ActorT>
 	{
 		return register_actor_erased(name, typeid(ActorT), static_cast<void*>(&actor));
 	}

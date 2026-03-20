@@ -26,9 +26,8 @@ public:
         std::cout << "Registering actor with name " << name << std::endl;
     }
 
-    template <typename Self>
+    template <ActorImpl Self>
     auto do_registrations(this Self&& self, ActorRegistry& registry)
-        requires ActorImpl<std::remove_cvref_t<Self>>
     {
         auto res = registry.register_actor<Self>(self.name_, self);
         if (!res) {
