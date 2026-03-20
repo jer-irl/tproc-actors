@@ -4,6 +4,13 @@ Actor model framework built on [threadprocs](https://github.com/jer-irl/threadpr
 
 This README is handwritten, the code for this PoC is a bit sloppy (in all regards).
 
+## What differentiates this from others?
+
+This is built on [threadprocs](https://github.com/jer-irl/threadprocs), which provides a single shared memory address space for sub(thread)processes, which may be launched independently.
+These threadprocs can even be separately-compiled binaries.
+
+The shared address-space means that complicated data structures (nested) can be passed by reference between actors, even if those actors come from different threadprocs and different binaries.
+
 ## Demo
 
 A threadproc server is started, and then two actors are launched into its address space.
@@ -13,19 +20,12 @@ The in-memory data structures are accessed from entirely distinct executables.
 
 https://github.com/user-attachments/assets/e037d7c1-96bb-4425-9a18-ddf67744f0d1
 
-## What differentiates this from others?
-
-This is built on [threadprocs](https://github.com/jer-irl/threadprocs), which provides a single shared memory address space for sub(thread)processes, which may be launched independently.
-These threadprocs can even be separately-compiled binaries.
-
-The shared address-space means that complicated data structures (nested) can be passed by owning reference between actors, even if those actors come from different threadprocs and different binaries.
-
 ## Is this a good idea?
 
 "Good" is in the eye of the beholder.
 
 That said, probably not.
-Conventionally, one would use plain ol' pthreads in a single multi-threaded process.
+Conventionally, one would use plain old pthreads in a single multi-threaded process.
 If the multi-process model was important, the conventional approach would be to use explicit shared memory regions, and flat data (or carefully allocated data) resident in that shared memory.
 Notably, idiomatic pointer-based C++ data structures don't work in the shared memory region approach, but _do_ work in a shared address space (multi-threading, or threadprocs).
 
