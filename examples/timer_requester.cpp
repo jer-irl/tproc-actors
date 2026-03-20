@@ -1,4 +1,4 @@
-#include <tpactor/actors/timer_service.hpp>
+#include <tpactor/actors/timer.hpp>
 #include <tpactor/core/registry.hpp>
 
 #include <thread>

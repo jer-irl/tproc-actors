@@ -26,6 +26,8 @@ public:
         std::cout << "Registering actor with name " << name << std::endl;
     }
 
+    // "deducing this" doesn't work in the constructor.  An alternative to this two-phase init would
+    // be to use CRTP
     template <ActorImpl Self>
     auto do_registrations(this Self&& self, ActorRegistry& registry)
     {

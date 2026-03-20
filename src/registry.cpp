@@ -201,6 +201,7 @@ auto ActorRegistry::register_actor_erased(std::string_view name, std::type_info 
 		while (!ring->push(std::move(entry))) {
 			// Wait for space in the ring
 		}
+		std::cout << "Registered actor " << name << " with type " << type_info.name() << " in registry, notified tproc with id " << i << std::endl;
 	}
 
 	return {};
