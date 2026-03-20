@@ -95,8 +95,6 @@ ActorRegistry::ActorRegistry() {
 auto ActorRegistry::poll_queue() -> bool {
 	RegistryRingEntry entry;
 	if (own_ring_->pop(entry)) {
-		std::cout << "Received registry event of kind " << static_cast<int>(entry.kind) << " tproc id " << tproc_id_ << std::endl;
-		// std::string_view name{entry.actor.name.data(), ::strnlen(entry.actor.name.data(), entry.actor.name.size())};
 		switch (entry.kind) {
 			case RegistryRingEntry::Kind::NewTproc:
 				{
