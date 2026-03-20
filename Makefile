@@ -25,14 +25,13 @@ LIB_CFLAGS := -Iinclude -I$(LIBTPROC_DIR)
 
 # --- Examples --------------------------------------------------------------
 
-EXAMPLE_DIRS := $(foreach d,$(wildcard examples/*/.),\
-                  $(if $(wildcard $(dir $(d))*.cpp),$(d)))
-EXAMPLE_BINS := $(foreach d,$(EXAMPLE_DIRS),\
-                  $(BUILD_DIR)/examples/$(notdir $(patsubst %/.,%,$(d))))
+EXAMPLE_SRCS := $(wildcard examples/*.cpp)
+EXAMPLE_BINS := $(EXAMPLE_SRCS:examples/%.cpp=$(BUILD_DIR)/examples/%)
+EXAMPLE_OBJS := $(EXAMPLE_SRCS:examples/%.cpp=$(OBJ_DIR)/examples/%.o)
 
 # ======================================================================
 
-EXAMPLE_SCRIPTS := $(wildcard examples/*/*.sh)
+EXAMPLE_SCRIPTS := $(wildcard examples/*.sh)
 
 .PHONY: all lib examples test clean
 
@@ -68,25 +67,15 @@ $(LIB): $(LIB_OBJS) $(LIBTPROC_A) | $(BUILD_DIR)
 	rm -f $@
 	$(AR) rcs $@ $(LIB_OBJS) $(LIBTPROC_OBJS)
 
-# --- Example build (each subdir produces one binary) ----------------------
+# --- Example build (each .cpp produces one binary) -------------------------
 
 EXAMPLE_CFLAGS := -Iinclude -Iexamples
 
 $(OBJ_DIR)/examples/%.o: examples/%.cpp | $(OBJ_DIR)/examples
-	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(EXAMPLE_CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-define EXAMPLE_template
-_$(1)_SRCS := $(wildcard examples/$(1)/*.cpp)
-_$(1)_OBJS := $$(patsubst examples/%.cpp,$(OBJ_DIR)/examples/%.o,$$(_$(1)_SRCS))
-EXAMPLE_OBJS += $$(_$(1)_OBJS)
-
-$(BUILD_DIR)/examples/$(1): $$(_$(1)_OBJS) $(LIB) | $(BUILD_DIR)/examples
-	$(CXX) $(CXXFLAGS) -o $$@ $$(_$(1)_OBJS) -L$(BUILD_DIR) -ltpactor
-endef
-
-$(foreach d,$(EXAMPLE_DIRS),\
-  $(eval $(call EXAMPLE_template,$(notdir $(patsubst %/.,%,$(d))))))
+$(BUILD_DIR)/examples/%: $(OBJ_DIR)/examples/%.o $(LIB) | $(BUILD_DIR)/examples
+	$(CXX) $(CXXFLAGS) -o $@ $< -L$(BUILD_DIR) -ltpactor
 
 # --- Directory creation ----------------------------------------------------
 

@@ -4,7 +4,7 @@ set -o errexit
 set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 TPROC_BUILD="${ROOT_DIR}/threadprocs/buildout"
 ACTOR_BUILD="${ROOT_DIR}/buildout"

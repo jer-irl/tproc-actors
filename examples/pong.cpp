@@ -1,4 +1,4 @@
-#include "ping_pong/actors.hpp"
+#include "ping_pong.hpp"
 
 #include <iostream>
 #include <thread>
