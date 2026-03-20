@@ -16,7 +16,7 @@ TIMER_REQUESTER="${ACTOR_BUILD}/examples/timer_requester"
 
 SERVICE_NAME="TimerService"
 
-SOCK="${ACTOR_BUILD}/examples/timer_requester.sock"
+SOCK="${ACTOR_BUILD}/examples/timer.sock"
 rm -f "${SOCK}"
 
 cleanup() {
