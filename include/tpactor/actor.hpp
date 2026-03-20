@@ -57,6 +57,9 @@ public:
         return false;
     }
 
+protected:
+    auto name() const -> std::string_view { return name_; }
+
 private:
     template <typename Self>
     auto on_message(this Self&& self, UniqueResourcePtr<void> message) -> void {
