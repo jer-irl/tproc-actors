@@ -75,7 +75,7 @@ private:
         requires ReceiverOf<Self, ReceivableT>
     auto try_handle_message(this Self&& self, UniqueResourcePtr<void>& message) -> bool {
         if (typeid(ReceivableT) == message.type_info()) {
-            self.on_message_impl(std::move(reinterpret_cast<UniqueResourcePtr<ReceivableT>&&>(message)));
+            self.on_message_impl(std::move(reinterpret_cast<UniqueResourcePtr<std::add_const_t<ReceivableT>>&&>(message)));
             return true;
         }
         return false;

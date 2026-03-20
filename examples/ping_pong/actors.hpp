@@ -41,7 +41,7 @@ public:
 
     auto send_ping(int val) ->void;
 
-    auto on_message_impl(tpactor::UniqueResourcePtr<NoisyInt> message) -> void {
+    auto on_message_impl(tpactor::UniqueResourcePtr<NoisyInt const> message) -> void {
         std::cout << "Got pong with value " << message->val << std::endl;
         got_pong_ = true;
     }
@@ -72,7 +72,7 @@ public:
         ready_.store(true, std::memory_order_release);
     }
 
-    auto on_message_impl(tpactor::UniqueResourcePtr<NoisyInt> message) -> void {
+    auto on_message_impl(tpactor::UniqueResourcePtr<NoisyInt const> message) -> void {
         std::cout << "Got ping with value " << message->val << std::endl;
         ping_actor_->send_to(tpactor::UniqueResourcePtr{new NoisyInt(message->val + 1), tproc_id()});
         got_ping_ = true;

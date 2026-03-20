@@ -1,4 +1,4 @@
-#include "timing_service/timing_service.hpp"
+#include "tpactor/actors/timer_service.hpp"
 
 #include <thread>
 
@@ -15,12 +15,12 @@ int main(int argc, char** argv) {
 		}
 	};
 
-	example::timingservice::TimingServiceActor timing_service{argv[1]};
-	timing_service.do_registrations(registry);
+	tpactor::actors::TimerServiceActor timer_service{argv[1]};
+	timer_service.do_registrations(registry);
 
 	while (true) {
-		timing_service.poll();
-		timing_service.check_timeouts();
+		timer_service.poll();
+		timer_service.check_timeouts();
 	}
 
 	return 0;

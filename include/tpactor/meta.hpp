@@ -26,7 +26,7 @@ concept ActorImpl = std::derived_from<std::remove_cvref_t<T>, Actor> && requires
 };
 
 template <typename T, typename M>
-concept ReceiverOf = ActorImpl<T> && ContainsTypeV<typename std::remove_cvref_t<T>::Receivables, M> && requires(T t, UniqueResourcePtr<M> resource) {
+concept ReceiverOf = ActorImpl<T> && ContainsTypeV<typename std::remove_cvref_t<T>::Receivables, M> && requires(T t, UniqueResourcePtr<std::add_const_t<M>> resource) {
     { t.on_message_impl(std::move(resource)) } -> std::same_as<void>;
 };
 
