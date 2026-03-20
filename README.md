@@ -4,6 +4,15 @@ Actor model framework built on [threadprocs](https://github.com/jer-irl/threadpr
 
 This README is handwritten, the code for this PoC is a bit sloppy (in all regards).
 
+## Demo
+
+A threadproc server is started, and then two actors are launched into its address space.
+
+The requester passes multiple `std::map<...::time_point, std::function<...>>` objects to the service, which spins and notifies the requester when timers expire.
+The in-memory data structures are accessed from entirely distinct executables.
+
+https://github.com/user-attachments/assets/e037d7c1-96bb-4425-9a18-ddf67744f0d1
+
 ## What differentiates this from others?
 
 This is built on [threadprocs](https://github.com/jer-irl/threadprocs), which provides a single shared memory address space for sub(thread)processes, which may be launched independently.
