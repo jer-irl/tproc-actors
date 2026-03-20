@@ -1,14 +1,14 @@
 #pragma once
 
-#include <tpactor/mem.hpp>
-#include <tpactor/meta.hpp>
-#include <tpactor/rings.hpp>
+#include <tpactor/core/mem.hpp>
+#include <tpactor/core/meta.hpp>
+#include <tpactor/core/rings.hpp>
 
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
 
-namespace tpactor {
+namespace tpactor::core {
 
 class ActorRegistry;
 
@@ -98,4 +98,4 @@ private:
     std::string name_;
 };
 
-} // namespace tpactor
+} // namespace tpactor::core

@@ -1,6 +1,9 @@
-#include "tpactor/actors/timer_service.hpp"
+#include <tpactor/actors/timer_service.hpp>
 
 #include <thread>
+
+namespace tpaactors = tpactor::actors;
+namespace tpacore = tpactor::core;
 
 int main(int argc, char** argv) {
 	if (argc != 2) {
@@ -8,14 +11,14 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	tpactor::ActorRegistry& registry = tpactor::ActorRegistry::instance()->get();
+	tpacore::ActorRegistry& registry = tpacore::ActorRegistry::instance()->get();
 	auto registry_worker = std::thread{
 		[&registry] {
 			registry.run();
 		}
 	};
 
-	tpactor::actors::TimerServiceActor timer_service{argv[1]};
+	tpaactors::TimerService timer_service{argv[1]};
 	timer_service.do_registrations(registry);
 
 	while (true) {

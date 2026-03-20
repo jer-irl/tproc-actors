@@ -2,7 +2,7 @@
 
 #include <utility>
 
-namespace tpactor {
+namespace tpactor::core {
 
 template <typename T>
 class UniqueResourcePtr;
@@ -33,4 +33,4 @@ concept ReceiverOf = ActorImpl<T> && ContainsTypeV<typename std::remove_cvref_t<
 template <typename... Ts>
 struct TypeContainer {};
 
-} // namespace tpactor
+} // namespace tpactor::core

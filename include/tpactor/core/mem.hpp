@@ -1,6 +1,6 @@
 #pragma once
 
-#include "registry.hpp"
+#include <tpactor/core/registry.hpp>
 
 #include <cstring>
 #include <string_view>
@@ -8,7 +8,7 @@
 #include <typeinfo>
 #include <utility>
 
-namespace tpactor {
+namespace tpactor::core {
 
 template <typename T>
 class UniqueResourcePtr {
@@ -61,4 +61,4 @@ private:
 template <typename T>
 UniqueResourcePtr(T*, std::uint64_t) -> UniqueResourcePtr<T>;
 
-} // namespace tpactor
+} // namespace tpactor::core

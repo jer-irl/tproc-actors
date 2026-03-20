@@ -3,8 +3,10 @@
 #include <iostream>
 #include <thread>
 
+namespace tpacore = tpactor::core;
+
 int main() {
-    tpactor::ActorRegistry& registry = tpactor::ActorRegistry::instance()->get();
+    tpacore::ActorRegistry& registry = tpacore::ActorRegistry::instance()->get();
 
     auto registry_worker = std::thread{
         [&registry] {
@@ -12,16 +14,16 @@ int main() {
         }
     };
 
-    PingActor ping{"PingActor"};
+    example::PingActor ping{"PingActor"};
     ping.do_registrations(registry);
 
     std::cout << "PingActor created waiting to bind PongActor..." << std::endl;
 
-    while (!registry.find_actor<PongActor>("PongActor")) {
+    while (!registry.find_actor<example::PongActor>("PongActor")) {
         // Wait for PongActor to be created
     }
 
-    PongActor& pong = registry.find_actor<PongActor>("PongActor")->get();
+    example::PongActor& pong = registry.find_actor<example::PongActor>("PongActor")->get();
     std::cout << "PongActor found!" << std::endl;
     ping.set_pong_actor(pong);
 

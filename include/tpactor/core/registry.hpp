@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tpactor/meta.hpp>
+#include <tpactor/core/meta.hpp>
 
 #include <atomic>
 #include <cstdint>
@@ -9,11 +9,10 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
 
-namespace tpactor {
+namespace tpactor::core {
 
 struct GlobalShmScratch;
 struct RegistryRing;
@@ -103,4 +102,4 @@ private:
 	std::atomic_bool should_stop_{false};
 };
 
-} // namespace tpactor
+} // namespace tpactor::core

@@ -1,26 +1,25 @@
 #pragma once
 
-#include "tpactor/mem.hpp"
-#include "tpactor/registry.hpp"
-#include <compare>
-#include <tpactor/actor.hpp>
+#include <tpactor/core/mem.hpp>
+#include <tpactor/core/registry.hpp>
+#include <tpactor/core/actor.hpp>
 
 #include <chrono>
+#include <compare>
 #include <list>
 #include <map>
 #include <queue>
 
 namespace tpactor::actors {
 
-
-class TimerServiceRequesterActor;
-class TimerServiceActor;
+class TimerServiceRequester;
+class TimerService;
 
 using TimerCallback = std::function<void()>;
 
 struct TimerServiceRequestBatch {
 	std::map<std::chrono::steady_clock::time_point, TimerCallback> callbacks;
-	TimerServiceRequesterActor* requester;
+	TimerServiceRequester* requester;
 };
 
 struct TimerServiceNotification {
@@ -29,39 +28,30 @@ struct TimerServiceNotification {
 	TimerCallback callback;
 };
 
-class TimerServiceRequesterActor : public tpactor::Actor {
+class TimerServiceRequester : public core::Actor {
 public:
 	using Receivables = std::tuple<TimerServiceNotification>;
 	using Destructables = std::tuple<TimerServiceRequestBatch>;
 
-	explicit TimerServiceRequesterActor(std::string_view name, std::string_view service_name)
-		: Actor(name), timer_service_(nullptr)
+	explicit TimerServiceRequester(std::string_view name, TimerService& timer_service)
+		: Actor{name}, timer_service_(&timer_service)
 	{
-		tpactor::ActorRegistry& registry = tpactor::ActorRegistry::instance()->get();
-		while (!timer_service_) {
-			auto res = registry.find_actor<TimerServiceActor>(service_name);
-			if (res) {
-				timer_service_ = &res->get();
-			}
-			// Wait for the timer service to be registered
-		}
-		std::cout << "Timer requester " << name << " found timer service " << service_name << std::endl;
 	}
 
 	auto request_timeout_batch(std::map<std::chrono::steady_clock::time_point, TimerCallback> callbacks) -> void;
 
-	auto on_message_impl(tpactor::UniqueResourcePtr<TimerServiceNotification const> message) -> void {
-		std::cout << "Requester " << name() << " got notification for time target "
+	auto on_message_impl(core::UniqueResourcePtr<TimerServiceNotification const> message) -> void {
+		std::cout << name() << " got notification for time target "
 		          << message->time_target.time_since_epoch().count() << " actual "
 		          << message->time_actual.time_since_epoch().count() << std::endl;
 		message->callback();
 	}
 
 private:
-	TimerServiceActor* timer_service_;
+	TimerService* timer_service_;
 };
 
-class TimerServiceActor : public tpactor::Actor {
+class TimerService : public core::Actor {
 public:
 	using Receivables = std::tuple<TimerServiceRequestBatch>;
 	using Destructables = std::tuple<TimerServiceNotification>;
@@ -77,7 +67,7 @@ public:
 
 			auto const& callback = callbacks.at(record.target);
 
-			batch.requester->send_to(tpactor::UniqueResourcePtr{new TimerServiceNotification{
+			batch.requester->send_to(core::UniqueResourcePtr{new TimerServiceNotification{
 				.time_target = record.target,
 				.time_actual = now,
 				.callback = std::move(callback),
@@ -93,7 +83,7 @@ public:
 		}
 	}
 
-	auto on_message_impl(tpactor::UniqueResourcePtr<TimerServiceRequestBatch const> message) -> void {
+	auto on_message_impl(core::UniqueResourcePtr<TimerServiceRequestBatch const> message) -> void {
 		std::cout << "Timer service got batch request with " << message->callbacks.size() << " callbacks" << std::endl;
 		auto batch_it = batches_.emplace(batches_.end(), std::move(message));
 		for (auto& [time_target, callback] : batch_it->get()->callbacks) {
@@ -102,7 +92,7 @@ public:
 	}
 
 private:
-	using BatchList = std::list<tpactor::UniqueResourcePtr<TimerServiceRequestBatch const>>;
+	using BatchList = std::list<core::UniqueResourcePtr<TimerServiceRequestBatch const>>;
 	BatchList batches_;
 	struct BatchRecord {
 		std::chrono::steady_clock::time_point target;
@@ -114,13 +104,13 @@ private:
 	std::priority_queue<BatchRecord, std::vector<BatchRecord>, std::greater<>> batch_queue_;
 };
 
-inline auto TimerServiceRequesterActor::request_timeout_batch(std::map<std::chrono::steady_clock::time_point, TimerCallback> callbacks) -> void
+inline auto TimerServiceRequester::request_timeout_batch(std::map<std::chrono::steady_clock::time_point, TimerCallback> callbacks) -> void
 {
 	TimerServiceRequestBatch batch{
 		.callbacks = std::move(callbacks),
 		.requester = this,
 	};
-	timer_service_->send_to(tpactor::UniqueResourcePtr{new TimerServiceRequestBatch(std::move(batch)), tproc_id()});
+	timer_service_->send_to(core::UniqueResourcePtr{new TimerServiceRequestBatch(std::move(batch)), tproc_id()});
 }
 
 } // namespace tpactor::actors

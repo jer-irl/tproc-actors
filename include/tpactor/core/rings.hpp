@@ -3,7 +3,7 @@
 #include <array>
 #include <atomic>
 
-namespace tpactor {
+namespace tpactor::core {
 
 template <typename T, std::size_t Size>
 class MpscRing {
@@ -53,4 +53,4 @@ private:
 	std::array<T, Size> buffer_;
 };
 
-} // namespace tpactor
+} // namespace tpactor::core

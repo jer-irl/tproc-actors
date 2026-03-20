@@ -1,7 +1,7 @@
-#include "tpactor/registry.hpp"
+#include <tpactor/core/registry.hpp>
 
-#include "tpactor/mem.hpp"
-#include "tpactor/rings.hpp"
+#include <tpactor/core/mem.hpp>
+#include <tpactor/core/rings.hpp>
 
 #include <mutex>
 #include <tproc.h>
@@ -13,7 +13,7 @@
 #include <typeinfo>
 #include <variant>
 
-namespace tpactor {
+namespace tpactor::core {
 
 struct alignas(64) RegistryRingEntry {
 	enum class Kind {
@@ -229,4 +229,4 @@ auto ActorRegistry::num_tprocs() const -> std::uint64_t {
 	return shm_scratch_->num_tprocs.load(std::memory_order_acquire);
 }
 
-} // namespace tpactor
+} // namespace tpactor::core

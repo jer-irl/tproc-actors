@@ -1,10 +1,14 @@
 #pragma once
 
-#include "tpactor/actor.hpp"
-#include "tpactor/registry.hpp"
+#include <tpactor/core/actor.hpp>
+#include <tpactor/core/registry.hpp>
 
 #include <atomic>
 #include <iostream>
+
+namespace example {
+
+namespace tpacore = tpactor::core;
 
 struct NoisyInt {
     NoisyInt(int val) : val(val) {
@@ -27,7 +31,7 @@ struct NoisyInt {
 
 class PongActor;
 
-class PingActor : public tpactor::Actor {
+class PingActor : public tpacore::Actor {
 public:
     using Receivables = std::tuple<NoisyInt>;
     using Destructables = std::tuple<NoisyInt>;
@@ -41,7 +45,7 @@ public:
 
     auto send_ping(int val) ->void;
 
-    auto on_message_impl(tpactor::UniqueResourcePtr<NoisyInt const> message) -> void {
+    auto on_message_impl(tpacore::UniqueResourcePtr<NoisyInt const> message) -> void {
         std::cout << "Got pong with value " << message->val << std::endl;
         got_pong_ = true;
     }
@@ -60,7 +64,7 @@ private:
     bool got_pong_{false};
 };
 
-class PongActor : public tpactor::Actor {
+class PongActor : public tpacore::Actor {
 public:
     using Receivables = std::tuple<NoisyInt>;
     using Destructables = std::tuple<NoisyInt>;
@@ -72,9 +76,9 @@ public:
         ready_.store(true, std::memory_order_release);
     }
 
-    auto on_message_impl(tpactor::UniqueResourcePtr<NoisyInt const> message) -> void {
+    auto on_message_impl(tpacore::UniqueResourcePtr<NoisyInt const> message) -> void {
         std::cout << "Got ping with value " << message->val << std::endl;
-        ping_actor_->send_to(tpactor::UniqueResourcePtr{new NoisyInt(message->val + 1), tproc_id()});
+        ping_actor_->send_to(tpacore::UniqueResourcePtr{new NoisyInt(message->val + 1), tproc_id()});
         got_ping_ = true;
     }
 
@@ -94,6 +98,8 @@ private:
 
 inline auto PingActor::send_ping(int val) -> void {
     std::cout << "Sending ping with value " << val << std::endl;
-    pong_actor_->send_to(tpactor::UniqueResourcePtr{new NoisyInt{val}, tproc_id()});
+    pong_actor_->send_to(tpacore::UniqueResourcePtr{new NoisyInt{val}, tproc_id()});
     std::cout << "Ping sent" << std::endl;
 }
+
+} // namespace example
